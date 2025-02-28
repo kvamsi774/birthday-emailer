@@ -1,4 +1,10 @@
 import logging
+import pandas as pd
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
@@ -10,7 +16,55 @@ logging.basicConfig(
     ]
 )
 
-# Replace print statements with logging
+def check_birthdays():
+    """Check CSV file for today's birthdays"""
+    try:
+        df = pd.read_csv('birthdays.csv')
+        today = datetime.now().strftime('%m-%d')
+        
+        # Convert birthday column to same format as today (mm-dd)
+        df['birthday'] = pd.to_datetime(df['birthday']).dt.strftime('%m-%d')
+        return df[df['birthday'] == today]
+    except Exception as e:
+        logging.error(f"Error checking birthdays: {str(e)}")
+        return pd.DataFrame()
+
+def send_birthday_email(name, email):
+    """Send birthday email to a person"""
+    try:
+        sender_email = os.environ.get('SENDER_EMAIL')
+        sender_password = os.environ.get('EMAIL_PASSWORD')
+        
+        if not sender_email or not sender_password:
+            logging.error("Missing email credentials in environment variables")
+            return
+            
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = email
+        msg['Subject'] = f"Happy Birthday {name}!"
+        
+        body = f"""
+        Dear {name},
+        
+        Happy Birthday! 🎉 🎂 
+        Wishing you a fantastic day filled with joy and celebration!
+        
+        Best wishes,
+        Your Automated Birthday Wisher
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            
+        logging.info(f"Successfully sent birthday email to {name}")
+    except Exception as e:
+        logging.error(f"Error sending email to {name}: {str(e)}")
+
 def main():
     """Main function to check and send birthday emails"""
     logging.info("Checking for birthdays...")
@@ -23,4 +77,7 @@ def main():
             send_birthday_email(person['name'], person['email'])
         logging.info(f"Sent {len(birthday_people)} birthday emails")
     else:
-        logging.info("No birthdays today") 
+        logging.info("No birthdays today")
+
+if __name__ == "__main__":
+    main() 
