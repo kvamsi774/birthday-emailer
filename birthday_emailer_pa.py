@@ -5,10 +5,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from datetime import datetime
-from dotenv import load_dotenv
-
-# Load .env file for local testing
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(
