@@ -39,6 +39,8 @@ def send_birthday_email(name, email):
             logging.error("Missing email credentials in environment variables")
             return
             
+        logging.info(f"Attempting to send email from {sender_email} to {email}")
+        
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = email
@@ -56,14 +58,19 @@ def send_birthday_email(name, email):
         
         msg.attach(MIMEText(body, 'plain'))
         
+        logging.info("Connecting to Gmail SMTP server...")
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
+            logging.info("Attempting login...")
             server.login(sender_email, sender_password)
+            logging.info("Sending email...")
             server.send_message(msg)
             
         logging.info(f"Successfully sent birthday email to {name}")
     except Exception as e:
-        logging.error(f"Error sending email to {name}: {str(e)}")
+        logging.error(f"Detailed error sending email to {name}: {str(e)}")
+        # Print the type of error
+        logging.error(f"Error type: {type(e).__name__}")
 
 def main():
     """Main function to check and send birthday emails"""
