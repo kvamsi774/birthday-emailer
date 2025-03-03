@@ -5,6 +5,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load .env file for local testing
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -21,12 +25,20 @@ def check_birthdays():
     try:
         df = pd.read_csv('birthdays.csv')
         today = datetime.now().strftime('%m-%d')
+        logging.info(f"Today's date (MM-DD): {today}")
         
         # Convert birthday column to same format as today (mm-dd)
         df['birthday'] = pd.to_datetime(df['birthday']).dt.strftime('%m-%d')
-        return df[df['birthday'] == today]
+        logging.info("Converted birthdays in CSV:")
+        for _, row in df.iterrows():
+            logging.info(f"- {row['name']}: {row['birthday']}")
+            
+        matches = df[df['birthday'] == today]
+        logging.info(f"Found {len(matches)} matches for today's date")
+        return matches
     except Exception as e:
         logging.error(f"Error checking birthdays: {str(e)}")
+        print(f"Error: {str(e)}")
         return pd.DataFrame()
 
 def send_birthday_email(name, email):
